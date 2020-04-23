@@ -1,11 +1,10 @@
 <template>
   <div class="app-note-list">
     <ul class="note-list">
-      <app-note-list-item
-        v-for="note in byParameters"
+      <app-note-link
+        v-for="note in notes"
         :key="note.id"
         :note="note"
-        @click="openNote(note.id)"
       />
     </ul>
     <router-view />
@@ -19,21 +18,22 @@ import { Component, Prop } from 'vue-property-decorator';
 import { DEFAULT_PARAMETERS } from '../entities/defaults';
 import { ID } from '../api/types';
 import { INote } from '../entities/types';
+import { logger } from '../util';
+import AppNoteLink from './AppNoteLink.vue';
 /* eslint-enable no-unused-vars, import/no-unresolved */
 
-@Component
+@Component({
+  name: 'AppNoteList',
+  components: {
+    AppNoteLink,
+  },
+})
 export default class AppNoteList extends Vue {
-  @Prop()
-  keywords: string;
+  @Prop({ default: DEFAULT_PARAMETERS.keywords })
+  readonly keywords!: string;
 
-  @Prop()
-  deadline: number | null;
-
-  constructor(options: any) {
-    super(options);
-    this.keywords = DEFAULT_PARAMETERS.keywords;
-    this.deadline = DEFAULT_PARAMETERS.deadline;
-  }
+  @Prop({ default: DEFAULT_PARAMETERS.deadline })
+  readonly deadline!: number | null;
 
   get parameters() {
     return {
@@ -46,12 +46,9 @@ export default class AppNoteList extends Vue {
     return this.$store.state.notes.data;
   }
 
-  async created() {
+  created() {
+    logger.log('created...');
     this.$store.dispatch('notes/read', this.parameters);
-  }
-
-  openNote(noteId: ID): void {
-    this.$router.push({ path: `/notes/note/${noteId}` });
   }
 }
 </script>

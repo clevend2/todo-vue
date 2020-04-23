@@ -41,7 +41,6 @@ export async function readEntities<T extends IEntity>(
 
     if (!existingEntity) {
       commit('addEntity', entity);
-      commit('addEntityToFilter', entity);
     } else {
       commit('modifyEntity', [existingEntity, entity]);
     }
@@ -50,7 +49,7 @@ export async function readEntities<T extends IEntity>(
   const existingResultMeta: IEntityResultMeta | undefined = state.resultMeta[stringifiedParameters];
 
   if (existingResultMeta) {
-    commit('modifyResultMeta', [existingResultMeta, resultMeta]);
+    commit('modifyResultMeta', [stringifiedParameters, resultMeta]);
   } else {
     commit('addResultMeta', [stringifiedParameters, resultMeta]);
   }
@@ -74,10 +73,8 @@ export async function updateEntity<T extends IEntity>(
 
   if (existingEntity) {
     commit('modifyEntity', [existingEntity, result]);
-    commit('setCurrentEntity', existingEntity);
   } else {
     commit('addEntity', result);
-    commit('setCurrentEntity', result);
   }
 
   return result;

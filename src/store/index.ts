@@ -1,4 +1,5 @@
-import { Store, StoreOptions } from 'vuex';
+import Vue from 'vue';
+import Vuex, { StoreOptions } from 'vuex';
 import notes from '@/store/modules/notes';
 import { RootState } from './types';
 
@@ -8,6 +9,8 @@ const options: StoreOptions<RootState> = {
   },
 };
 
-const rootStore = new Store<RootState>(options);
+Vue.use(Vuex);
+
+const rootStore = new Vuex.Store<RootState>(options);
 
 export default rootStore;

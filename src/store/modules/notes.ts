@@ -1,3 +1,4 @@
+import { IAPICollectionModule } from '@/store/types';
 import { INote } from '@/entities/types';
 import { errorDecoratorFactory, notify } from '@/util';
 import { entitiesMappedById } from '@/entities/getters';
@@ -11,13 +12,13 @@ import {
 import {
   createEntity, readEntities, updateEntity, deleteEntity,
 } from '@/entities/actions';
-import { IAPICollectionModule } from '../types';
 
 const BASE_URI = 'notes';
 
 const e = errorDecoratorFactory('notes');
 
 const notes: IAPICollectionModule<INote> = {
+  namespaced: true,
   state: {
     data: [],
     resultMeta: {},

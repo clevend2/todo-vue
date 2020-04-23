@@ -1,6 +1,7 @@
 import {
   IEntity, IEntityParameters, IEntityReadResult, INote,
 } from '@/entities/types';
+import { logger } from '@/util/index';
 import {
   HTTPAction, IParameters, IParameterValue, Persisted,
 } from './types';
@@ -108,10 +109,10 @@ const notesAPI = {
 };
 
 async function fakeREST(action: HTTPAction, URI: string, data?: any): Promise<any> {
-  const { pathname, searchParams } = new URL(URI, '//fake.com');
-  const [resource, id] = pathname.split('/');
+  const { pathname, searchParams } = new URL(URI, 'http://fake.com');
+  const [, resource, id] = pathname.split('/');
   let parameters: IEntityParameters;
-
+  logger.log('API Request:', action, URI, data);
   if (resource !== 'notes') {
     throw new TypeError('Uhh... this is not notes. We only have notes right now.');
   }
