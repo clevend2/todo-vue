@@ -1,0 +1,10 @@
+@mixin elevate($shadowColor, $height) {
+  box-shadow: 0 $height/2 $height $height/2 $shadowColor;
+}
+
+@mixin elevateOnFocus($shadowColor, $height) {
+  &:hover, &:focus {
+    @include elevate($shadowColor, $height);
+  }
+}
+

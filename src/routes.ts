@@ -10,36 +10,23 @@ Vue.use(VueRouter);
 const routes = [];
 
 // #region Notes
-
 routes.push({
   path: '/notes',
   component: AppNoteList,
-  children: [
-    {
-      path: 'note/:noteId',
-      props: true,
-      component: AppNote,
-    },
-  ],
 });
 
+routes.push({
+  path: '/note/:noteId',
+  props: true,
+  component: AppNote,
+});
+
+routes.push({
+  path: '/notes/new',
+  props: true,
+  component: AppNote,
+});
 // #endregion Notes
-// #region Tasks
-
-// routes.push({
-//   path: '/tasks',
-//   component: AppNoteList,
-//   props: true,
-//   children: [
-//     {
-//       path: 'task/:taskId',
-//       props: true,
-//       component: AppNote,
-//     },
-//   ],
-// });
-
-// #endregion Tasks
 
 export default new VueRouter({
   // mode: 'history',

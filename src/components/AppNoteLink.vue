@@ -1,7 +1,10 @@
 <template>
-  <button class="note-list-item" @click="openNote">
+  <router-link
+    class="note-link"
+    :to="`/note/${note.id}`"
+  >
     {{ note.gist }}
-  </button>
+  </router-link>
 </template>
 
 <script lang="ts">
@@ -17,15 +20,14 @@ import { INote } from '@/entities/types';
 export default class AppNoteListItem extends Vue {
   @Prop()
   readonly note!: INote;
-
-  openNote() {
-    this.$router.push({ path: `/notes/note/${this.note.id}` });
-  }
 }
 </script>
 
 <style lang="scss" scoped>
-.note-list-item {
-  padding: 10px;
+.note-link {
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

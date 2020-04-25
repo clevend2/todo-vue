@@ -1,20 +1,25 @@
 <template>
-  <div class="note">
-    <h3
-      ref="gist"
-      class="note-gist"
-      contenteditable="true"
-      v-html="note.gist"
-    >
-    </h3>
-    <div
+  <article class="note">
+    <app-loader
+      :uploading="uploading"
+      :downloading="downloading"
+    />
+    <header>
+      <h3
+        ref="gist"
+        class="note-gist"
+        contenteditable="true"
+      />
+    </header>
+    <section
       ref="text"
       class="note-text"
       contenteditable="true"
-      v-html="note.text"
-    >
-    </div>
-  </div>
+    />
+    <footer class="note-footer">
+      <i v-show="edited">Edited</i>
+    </footer>
+  </article>
 </template>
 
 <script lang="ts">
@@ -23,164 +28,191 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { DEFAULT_NOTEBOOK_NOTE } from '../entities/defaults';
 import debounce from '../util/debounce';
+import RequestManager from '../util/request-manager';
 import { ID } from '../api/types';
-import { INote } from '../entities/types';
-import { EditableContentEvent } from './types';
+import { INote, IEntityReadResult } from '../entities/types';
 import { logger } from '../util';
+import AppLoader from './_shared/AppLoader.vue';
 /* eslint-enable no-unused-vars, import/no-unresolved */
-
-const observeConfig = { characterData: true, attributes: false, childList: true, subtree: false };
 
 @Component({
   name: 'AppNote',
+  components: {
+    AppLoader,
+  },
 })
 export default class AppNote extends Vue {
   // holds the return for the debounced change event emitter
-  $_debouncedEmitter?: () => void;
+  $_debouncedEmitter!: () => void;
 
-  // holds the mutation observer for the editable content
-  $_mutationObserver?: MutationObserver;
+  // holds the mutation observers for the editable content
+  $_mutationObservers!: WeakMap<HTMLElement, MutationObserver>;
+
+  // the request manager for server-side fetching of the note
+  $_readMgr!: RequestManager<ID>;
+
+  // request manager for updates/creates
+  $_writeMgr!: RequestManager<INote>;
+
+  $refs!: {
+    'gist': HTMLElement;
+    'text': HTMLElement;
+  };
 
   @Prop()
   readonly noteId!: ID | null;
 
-  note: INote = {
-    ...DEFAULT_NOTEBOOK_NOTE,
-  };
+  uploading: boolean = false;
 
-  get persistedNote() {
+  downloading: boolean = false;
+
+  edited: boolean = false;
+
+  // this is simply here to take advantage of getter caching
+  get noteFromStore() {
     return this.$store.getters['notes/byId'].get(this.noteId);
   }
 
   async created() {
-    this.$_debouncedEmitter = debounce(() => this.emitChanges(), 500);
+    this.$_mutationObservers = new WeakMap();
+
+    this.$_readMgr = new RequestManager(
+      (id: ID) => this.$store.dispatch('notes/read', {
+        id,
+      }),
+    );
+
+    this.$_writeMgr = new RequestManager(
+      (note: INote) => this.$store.dispatch(note.id ? 'notes/update' : 'notes/create', note),
+    );
+
+    this.$_debouncedEmitter = debounce(() => {
+      this.$emit('noteChanged', {
+        id: this.noteId,
+        gist: this.$refs.gist.innerHTML || '',
+        text: this.$refs.text.innerHTML || '',
+      });
+    }, 500);
+
+    // this watcher allows any server-side requesting to happen
+    // just a smidge faster than the mounting process
+    // by kicking off the request before mounting
+    this.$watch('noteId', () => {
+      if (this.noteId && !this.noteFromStore) {
+        this.downloading = true;
+        this.$_readMgr.request(this.noteId).then(() => {
+          this.downloading = false;
+        });
+      }
+    }, { immediate: true });
 
     // for now, the event is caught here and data processing is done in-component
     this.$on('noteChanged', (note: INote) => {
-      const action = note.id ? 'notes/update' : 'notes/create';
-      this.$store.dispatch(action, note);
+      this.uploading = true;
+      this.$_writeMgr.request(note).then(() => {
+        this.edited = false;
+        this.uploading = false;
+      });
     });
+  }
 
-    // set up the watcher for id changes since this component persists through routes
-    this.$watch('noteId', () => {
-      logger.log('note watched');
+  mounted() {
+    // this is in a separate watcher
+    this.$watch('noteId', async () => {
+      // pause observation (if any)
+      this.stopObserving(this.$refs.gist);
+      this.stopObserving(this.$refs.text);
+
+      // initialize with "fresh" note data
+      let noteData: INote = {
+        ...DEFAULT_NOTEBOOK_NOTE,
+      };
+
+      // if there is a note id, check the store
+      // (done via the persistedNote getter)
       if (this.noteId) {
-        logger.log('note id changed', this.noteId);
-        
-        this.getNoteData().then(() => {
-          this.setObserver();
-        })
+        // if the note doesn't exist in the store, get it into the store
+        // (this would have been started in the `created` hook)
+        if (!this.noteFromStore) {
+          this.downloading = true;
+          await this.$_readMgr.request(this.noteId);
+          this.downloading = false;
+        }
+
+        noteData = this.noteFromStore;
       }
+
+      this.$refs.gist.innerHTML = noteData.gist || '';
+      this.$refs.text.innerHTML = noteData.text;
+
+      // start observing after initializing inputs
+      this.startObserving(this.$refs.gist);
+      this.startObserving(this.$refs.text);
     }, { immediate: true });
   }
 
   beforeDestroy() {
-    if (this.$_mutationObserver) {
-      this.$_mutationObserver.disconnect();
-    }
+    this.stopObserving(this.$refs.gist);
+    this.stopObserving(this.$refs.text);
   }
 
-  initializeObserver() {
-    logger.log(`initializeObserver triggered`);
-    const observedByRef: Map<string, Set<Element>> = new Map();
-
-    // want to explicitely track every new node that has been added so it can be specifically monitored,
-    // and tied to the root element, rather than tracking the subtree and marking every change indescriminantly
-    this.$_mutationObserver = new MutationObserver((mutations: MutationRecord[]) => {
-      logger.log(`mutationObserver triggered`);
-    
-      for (let mutation of mutations) {
-        const target: Element = <Element>mutation.target;
-        let mutatedRef: string | null = null;
-        let observedElsForRef: Set<Element> | null = null;
-
-        // look in the sets of observed elements for which one it looks like this target belongs to
-        for (let [ref, observedEls] of observedByRef) {
-          if (observedEls.has(target)) {
-            mutatedRef = ref;
-            observedElsForRef = observedEls;
-          }
-        }
-
-        if (mutatedRef && observedElsForRef) {
-          logger.log(`mutatedRef found`);
-          switch (mutation.type) {
-            case 'childList':
-              // add it to the observed elements for the found ref
-              for (let addedNode of mutation.addedNodes) {
-                logger.log(`addedNode`);
-                observedElsForRef.add(<Element>addedNode);
-                if (this.$_mutationObserver) {
-                  this.$_mutationObserver.observe(addedNode, observeConfig)
-                }
-              }
-
-              // remove a deleted element from observed array
-              for (let removedNode of mutation.removedNodes) {
-                logger.log(`removedNode`);
-                observedElsForRef.delete(<Element>removedNode);
-              }
-              break;
-          }
-
-          this.edited(mutatedRef);
-        }
-      }
+  startObserving(inputEl: HTMLElement) {
+    const observer = new MutationObserver(() => {
+      this.edited = true;
+      this.$_debouncedEmitter();
     });
 
-    // initialize observer on root elements
-    for (let ref in this.$refs) {
-      const input: Element = <Element>this.$refs[ref];
+    observer.observe(inputEl, {
+      characterData: true,
+      attributes: false,
+      childList: true,
+      subtree: true,
+    });
 
-      observedByRef.set(ref, new Set([input]));
-      this.$_mutationObserver.observe(input, observeConfig);
-    }
+    this.$_mutationObservers.set(inputEl, observer);
   }
 
-  setObserver() {
-    if (this.$_mutationObserver) {
-      this.$_mutationObserver.disconnect();
+  stopObserving(inputEl: HTMLElement) {
+    const observer = this.$_mutationObservers.get(inputEl);
+    if (observer) {
+      observer.disconnect();
+
+      this.$_mutationObservers.delete(inputEl);
     }
-
-    this.initializeObserver();
-  }
-
-  edited(ref: string) {
-    const targetElement = <Element>this.$refs[ref];
-    logger.log(`edited: '${ref}'`);
-
-    if (targetElement) {
-      this.note[ref] = targetElement.innerHTML || '';
-      logger.log(`Changed ref '${ref}': ${this.note[ref]}`);
-
-      this.$_debouncedEmitter!();
-    }
-  }
-
-  async getNoteData() {
-    if (!this.persistedNote) {
-      logger.log("need new persisted note");
-
-      await this.$store.dispatch('notes/read', {
-        id: this.noteId,
-      });
-
-      logger.log("persisted note fetched");
-    }
-
-    logger.log("applying persisted note to data");
-
-    this.note = { ...this.persistedNote };
-  }
-
-  emitChanges() {
-    this.$emit('noteChanged', this.note);
   }
 }
 </script>
 
 <style lang="scss" scoped>
+@use '@/assets/scss/_colors' as colors;
+@use '@/assets/scss/_spacing' as spacing;
+@use '@/assets/scss/_mixins' as decor;
+
 .note {
-  padding: 10px;
+  @include decor.elevate(colors.$shadow, spacing.$text/2);
+
+  background-color: colors.$bg;
+  margin: 0 0 spacing.$row 0;
+
+  .note-gist, .note-text {
+    color: colors.$text-focus;
+    margin: 0;
+    min-height: spacing.$row;
+    padding: spacing.$text;
+  }
+
+  .note-gist {
+    border-bottom: 1px solid colors.$border;
+  }
+
+  .note-footer {
+    background-color: colors.$bg-secondary;
+    border-top: 1px dashed colors.$border-neutral;
+    padding: spacing.$text;
+
+    i {
+      color: colors.$text-secondary;
+    }
+  }
 }
 </style>

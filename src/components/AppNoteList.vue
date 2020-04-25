@@ -1,14 +1,20 @@
 <template>
-  <div class="app-note-list">
-    <ul class="note-list">
+  <ul class="note-list">
+    <li>
+      <router-link
+        class="note-link new-note"
+        :to="`/notes/new`"
+      />
+    </li>
+    <li
+      v-for="note in notes"
+      :key="note.id"
+    >
       <app-note-link
-        v-for="note in notes"
-        :key="note.id"
         :note="note"
       />
-    </ul>
-    <router-view />
-  </div>
+    </li>
+  </ul>
 </template>
 
 <script lang="ts">
@@ -54,7 +60,46 @@ export default class AppNoteList extends Vue {
 </script>
 
 <style lang="scss" scoped>
+@use '@/assets/scss/_colors' as colors;
+@use '@/assets/scss/_spacing' as spacing;
+@use '@/assets/scss/_mixins' as decor;
+
 .note-list {
-  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: spacing.$text/2;
+  padding: 0;
+
+  >* {
+    @include decor.elevateOnFocus(colors.$shadow, spacing.$text/4);
+
+    margin: spacing.$text/2;
+    overflow: hidden;
+
+    >.note-link {
+      background-color: colors.$bg;
+      border: 1px solid colors.$border;
+      color: colors.$text;
+      display: block;
+      height: spacing.$row;
+      padding: spacing.$text spacing.$text*2 spacing.$text spacing.$text;
+      transition: color 0.2s;
+
+      &.new-note {
+        padding: spacing.$text;
+        text-decoration: none;
+
+        &:before {
+          content: "+";
+          font-size: spacing.$row;
+        }
+      }
+
+      &:hover, &:focus {
+        background-color: colors.$bg-hover;
+        color: colors.$text-focus;
+      }
+    }
+  }
 }
 </style>

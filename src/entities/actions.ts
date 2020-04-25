@@ -1,17 +1,16 @@
 import { IAPICollectionContext } from '@/store/types';
 import { IEntity, IEntityReadResult, IEntityResultMeta } from '@/entities/types';
 import { Persisted, HTTPAction, IParameters } from '@/api/types';
-import { ErrorDecorator } from '@/util';
 import { api, parametersToQueryString } from '@/api/helpers';
+import EntityError from '@/entities/error';
 
 export async function createEntity<T extends IEntity>(
-  e: ErrorDecorator,
   BASE_URI: string,
   { commit }: IAPICollectionContext<T>,
   entity: T,
 ): Promise<Persisted<T>> {
   if (entity.id) {
-    throw e(new ReferenceError('create(): entity payload has ID'));
+    throw new EntityError('create(): entity payload has ID');
   }
 
   const result: Persisted<T> = await api(HTTPAction.POST, BASE_URI, entity);
@@ -22,7 +21,6 @@ export async function createEntity<T extends IEntity>(
 }
 
 export async function readEntities<T extends IEntity>(
-  e: ErrorDecorator,
   BASE_URI: string,
   { commit, state, getters }: IAPICollectionContext<T>,
   parameters: IParameters,
@@ -58,18 +56,17 @@ export async function readEntities<T extends IEntity>(
 }
 
 export async function updateEntity<T extends IEntity>(
-  e: ErrorDecorator,
   BASE_URI: string,
   { commit, getters }: IAPICollectionContext<T>,
   entity: Persisted<T>,
 ): Promise<Persisted<T>> {
-  if (entity.id) {
-    throw e(new ReferenceError('update(): entity payload has no ID'));
+  if (!entity.id) {
+    throw new EntityError('updateEntity(): entity payload has no ID');
   }
 
   const existingEntity: Persisted<T> | undefined = getters.byId.get(entity.id);
 
-  const result: Persisted<T> = await api(HTTPAction.PUT, `${BASE_URI}/${entity.id}`);
+  const result: Persisted<T> = await api(HTTPAction.PUT, `${BASE_URI}/${entity.id}`, entity);
 
   if (existingEntity) {
     commit('modifyEntity', [existingEntity, result]);
@@ -81,13 +78,12 @@ export async function updateEntity<T extends IEntity>(
 }
 
 export async function deleteEntity<T extends IEntity>(
-  e: ErrorDecorator,
   BASE_URI: string,
   { commit, getters }: IAPICollectionContext<T>,
   entity: Persisted<T>,
 ): Promise<void> {
-  if (entity.id) {
-    throw e(new ReferenceError('delete(): entity payload has no ID'));
+  if (!entity.id) {
+    throw new EntityError('deleteEntity(): entity payload has no ID');
   }
 
   await api(HTTPAction.DELETE, `${BASE_URI}/${entity.id}`);

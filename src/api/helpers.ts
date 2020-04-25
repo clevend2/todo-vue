@@ -3,7 +3,7 @@ import {
 } from '@/entities/types';
 import { logger } from '@/util/index';
 import {
-  HTTPAction, IParameters, IParameterValue, Persisted,
+  HTTPAction, IParameters, IParameterValue, Persisted, ID,
 } from './types';
 
 export const stringifyParameterValue = (v: IParameterValue): string => v.toString();
@@ -72,49 +72,52 @@ const notesAPI = {
       data: notes,
     };
   },
-  async update(entity: Persisted<INote>): Promise<IEntity> {
+  async update(entityId: ID, entityData: INote): Promise<IEntity> {
     // mocked
     let updated: IEntity;
 
     const existingNote: IEntity | undefined = notes.find(
-      (note) => (note.id === entity.id),
+      (note) => (note.id === entityId),
     );
     if (existingNote) {
-      Object.assign(existingNote, entity);
+      Object.assign(existingNote, entityData);
 
       updated = existingNote;
     } else {
-      updated = entity;
+      updated = entityData;
     }
 
     return updated;
   },
-  async remove(entity: Persisted<INote>): Promise<IEntity> {
+  async remove(entityId: ID): Promise<IEntity> {
     // mocked
     let removed: IEntity;
 
     const existingNoteIdx: number = notes.findIndex(
-      (note) => (note.id === entity.id),
+      (note) => (note.id === entityId),
     );
     if (existingNoteIdx > -1) {
       notes.splice(existingNoteIdx, 1);
 
-      removed = { id: entity.id };
+      removed = { id: entityId };
     } else {
-      throw new RangeError('404: resource not found');
+      throw new Error('404: resource not found');
     }
 
     return removed;
   },
 };
 
-async function fakeREST(action: HTTPAction, URI: string, data?: any): Promise<any> {
-  const { pathname, searchParams } = new URL(URI, 'http://fake.com');
+async function fakeREST(action: HTTPAction, path: string, body?: any): Promise<any> {
+  // shimming a real URL here so it can be parsed by URL() constructor
+  const { pathname, searchParams } = new URL(path, 'http://fake.fake');
   const [, resource, id] = pathname.split('/');
   let parameters: IEntityParameters;
-  logger.log('API Request:', action, URI, data);
+
+  logger.log('API Request:', action, path, body);
+
   if (resource !== 'notes') {
-    throw new TypeError('Uhh... this is not notes. We only have notes right now.');
+    throw new Error('Uhh... this is not notes. We only have notes right now.');
   }
 
   switch (action) {
@@ -127,13 +130,13 @@ async function fakeREST(action: HTTPAction, URI: string, data?: any): Promise<an
       }
       // falls through
     case HTTPAction.POST:
-      if (data && data.id) {
-        return notesAPI.update(data);
+      if (id && body) {
+        return notesAPI.update(id, body);
       }
       break;
     case HTTPAction.DELETE:
-      if (data) {
-        return notesAPI.remove(data);
+      if (id) {
+        return notesAPI.remove(id);
       }
       break;
     case HTTPAction.GET:
@@ -144,10 +147,23 @@ async function fakeREST(action: HTTPAction, URI: string, data?: any): Promise<an
 
       return notesAPI.find(parameters);
     default:
-      throw new SyntaxError('400: Malformed request');
+      throw new Error('400: Malformed request');
   }
 
   return null;
 }
 
-export const api = fakeREST;
+/**
+ * put an artificial delay in front of a function return
+ * between .5-1.5 seconds
+ */
+function mockDelay(fn: Function): Function {
+  return async (...args: any[]) => new Promise((resolve) => setTimeout(
+    () => {
+      resolve(fn(...args));
+    },
+    500 + (Math.random() * 5000),
+  ));
+}
+
+export const api = mockDelay(fakeREST);
