@@ -5,7 +5,7 @@
       :downloading="downloading"
     />
     <header>
-      <h3
+      <h6
         ref="gist"
         class="note-gist"
         contenteditable="true"
@@ -186,29 +186,36 @@ export default class AppNote extends Vue {
 <style lang="scss" scoped>
 @use '@/assets/scss/_colors' as colors;
 @use '@/assets/scss/_spacing' as spacing;
-@use '@/assets/scss/_mixins' as decor;
+@use '@/assets/scss/_mixins' as mixins;
 
 .note {
-  @include decor.elevate(colors.$shadow, spacing.$text/2);
+  @include mixins.elevate(colors.$shadow, spacing.$text/2);
 
   background-color: colors.$bg;
   margin: 0 0 spacing.$row 0;
 
   .note-gist, .note-text {
     color: colors.$text-focus;
-    margin: 0;
-    min-height: spacing.$row;
+    min-height: spacing.$text;
+  }
+
+  header, section {
     padding: spacing.$text;
   }
 
-  .note-gist {
-    border-bottom: 1px solid colors.$border;
+  header {
+    border-bottom: 1px dashed colors.$border-neutral;
+
+    h6 {
+      margin: 0;
+    }
   }
 
-  .note-footer {
+  footer {
     background-color: colors.$bg-secondary;
-    border-top: 1px dashed colors.$border-neutral;
+    border-top: 1px solid colors.$border-neutral;
     padding: spacing.$text;
+    transition: height 0.2s;
 
     i {
       color: colors.$text-secondary;
