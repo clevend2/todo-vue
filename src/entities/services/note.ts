@@ -1,5 +1,5 @@
 import rootStore from '@/store';
-import { ID } from '@/api/types';
+import { ID, Persisted } from '@/api/types';
 import { INote } from '@/entities/types';
 import { DEFAULT_NOTEBOOK_NOTE } from '@/entities/defaults';
 
@@ -7,7 +7,7 @@ import { DEFAULT_NOTEBOOK_NOTE } from '@/entities/defaults';
  * Get entity data from either the store or the API
  * if the entity is not in the store.
  */
-export async function retrieveNote(noteId: ID) {
+export async function retrieveNote(noteId: ID): Promise<Persisted<INote>> {
   if (!noteId) {
     throw new Error('retrieveNote(): ID not provided');
   }
@@ -30,15 +30,15 @@ export async function retrieveNote(noteId: ID) {
  * invokes the store to either create or update an entity
  * depending on if the payload includes an ID
  */
-export async function sendNote(data: INote) {
+export async function sendNote(data: INote): Promise<Persisted<INote>> {
   return rootStore.dispatch(data.id ? 'notes/update' : 'notes/create', data);
 }
 
 /**
  * Gets entity data, providing default data if no ID is provided
  */
-export async function prepareNoteData(noteId?: ID) {
-  let data;
+export async function prepareNoteData(noteId?: ID): Promise<INote> {
+  let data: INote;
 
   if (noteId) {
     data = await retrieveNote(noteId);
