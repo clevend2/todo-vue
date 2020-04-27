@@ -60,6 +60,8 @@ const notes: Persisted<INote>[] = [
   },
 ];
 
+let maxId = 6;
+
 const notesAPI = {
   async find(parameters: IEntityParameters): Promise<IEntityReadResult<INote>> {
     // mocked
@@ -72,11 +74,28 @@ const notesAPI = {
       data: notes,
     };
   },
-  async update(entityId: ID, entityData: INote): Promise<IEntity> {
+  async create(entityData: INote): Promise<Persisted<INote>> {
     // mocked
-    let updated: IEntity;
+    let created: Persisted<INote>;
 
-    const existingNote: IEntity | undefined = notes.find(
+    if (entityData.id) {
+      throw new Error('400: POST request body includes ID');
+    } else {
+      maxId += 1;
+
+      created = {
+        id: `${maxId + 1}`,
+        entityData,
+      };
+    }
+
+    return created;
+  },
+  async update(entityId: ID, entityData: INote): Promise<Persisted<INote>> {
+    // mocked
+    let updated: Persisted<INote>;
+
+    const existingNote: Persisted<INote> | undefined = notes.find(
       (note) => (note.id === entityId),
     );
     if (existingNote) {
@@ -84,14 +103,14 @@ const notesAPI = {
 
       updated = existingNote;
     } else {
-      updated = entityData;
+      throw new Error('404: resource not found');
     }
 
     return updated;
   },
-  async remove(entityId: ID): Promise<IEntity> {
+  async remove(entityId: ID): Promise<Persisted<IEntity>> {
     // mocked
-    let removed: IEntity;
+    let removed: Persisted<IEntity>;
 
     const existingNoteIdx: number = notes.findIndex(
       (note) => (note.id === entityId),
@@ -125,13 +144,13 @@ async function fakeREST(action: HTTPAction, path: string, body?: any): Promise<a
       // falls through
     case HTTPAction.PATCH:
       // TODO: skinny updates on an entity
-      if (!id) {
-        break;
-      }
-      // falls through
-    case HTTPAction.POST:
       if (id && body) {
         return notesAPI.update(id, body);
+      }
+      break;
+    case HTTPAction.POST:
+      if (body) {
+        return notesAPI.create(body);
       }
       break;
     case HTTPAction.DELETE:
