@@ -5,7 +5,7 @@
       :downloading="downloading"
     />
     <header>
-      <h6
+      <h1
         ref="gist"
         class="note-gist"
         contenteditable="true"
@@ -16,9 +16,9 @@
       class="note-text"
       contenteditable="true"
     />
-    <footer class="note-footer">
+    <!-- <footer class="note-footer">
       <i v-show="dirty">Edited</i>
-    </footer>
+    </footer> -->
   </article>
 </template>
 
@@ -170,17 +170,14 @@ export default class AppNote extends Vue {
 @use '@/assets/scss/_colors' as colors;
 @use '@/assets/scss/_spacing' as spacing;
 @use '@/assets/scss/_mixins' as mixins;
+@use '@/assets/scss/_font' as font;
 
 .note {
   @include mixins.elevate(colors.$shadow, spacing.$text/2);
 
   background-color: colors.$bg;
-  margin: 0 0 spacing.$row 0;
-
-  .note-gist, .note-text {
-    color: colors.$text-focus;
-    min-height: spacing.$text;
-  }
+  margin: 0;
+  padding: 0;
 
   header, section {
     padding: spacing.$text;
@@ -189,7 +186,9 @@ export default class AppNote extends Vue {
   header {
     border-bottom: 1px dashed colors.$border-neutral;
 
-    h6 {
+    h1 {
+      font-size: font.$base-size;
+      font-weight: bold;
       margin: 0;
     }
   }
@@ -203,6 +202,15 @@ export default class AppNote extends Vue {
     i {
       color: colors.$text-secondary;
     }
+  }
+
+  .note-gist, .note-text {
+    color: colors.$text-focus;
+    min-height: spacing.$text;
+  }
+
+  .note-text {
+    min-height: spacing.$row;
   }
 }
 </style>

@@ -10,6 +10,7 @@ export default {};
 
 <style lang="scss">
 @use '@/assets/scss/_colors' as colors;
+@use '@/assets/scss/_font' as font;
 
 @import url('~normalize.css/normalize.css');
 
@@ -21,5 +22,6 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: font.$base-size;
 }
 </style>

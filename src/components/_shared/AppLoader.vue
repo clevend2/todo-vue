@@ -29,6 +29,7 @@ $loader-height: 8em;
 $loader-width: spacing.$text/2;
 $loader-speed: 0.5s;
 $loader-timing-function: ease-in-out;
+$loader-max-opacity: 0.75;
 
 @keyframes loader-uploading {
   0% {
@@ -37,23 +38,23 @@ $loader-timing-function: ease-in-out;
   }
 
   50% {
-    opacity: 1;
+    opacity: $loader-max-opacity;
   }
 
   100% {
     opacity: 0;
-    top: -($loader-height + $loader-width/2);
+    top: -($loader-height + $loader-width);
   }
 }
 
 @keyframes loader-downloading {
   0% {
     opacity: 0;
-    top: -($loader-height + $loader-width/2);
+    top: -($loader-height + $loader-width);
   }
 
   50% {
-    opacity: 1;
+    opacity: $loader-max-opacity;
   }
 
   100% {
@@ -83,20 +84,20 @@ $loader-timing-function: ease-in-out;
     background-color: colors.$bg-upload;
 
     &:before {
-      border-top: $loader-width/2 solid transparent;
-      border-bottom: $loader-width/2 solid colors.$bg-upload;
-      border-left: $loader-width/2 solid colors.$bg-upload;
-      border-right: $loader-width/2 solid transparent;
-      top: -($loader-width/2);
+      border-top: 0;
+      border-bottom: $loader-width solid colors.$bg-upload;
+      border-left: 0;
+      border-right: $loader-width solid transparent;
+      top: -($loader-width);
     }
 
     &:after {
-      border-top: $loader-width/2 solid colors.$bg-upload;
-      border-bottom: $loader-width/2 solid transparent;
-      border-left: $loader-width/2 solid transparent;
-      border-right: $loader-width solid colors.$bg-upload;
+      border-top: $loader-width solid colors.$bg-upload;
+      border-bottom: 0;
+      border-left: $loader-width solid transparent;
+      border-right: 0;
 
-      top: $loader-height;
+      bottom: -($loader-width);
     }
 
     animation:
@@ -107,18 +108,18 @@ $loader-timing-function: ease-in-out;
     background-color: colors.$bg-download;
 
     &:before {
-      border-top: $loader-width/2 solid transparent;
-      border-bottom: $loader-width/2 solid colors.$bg-download;
-      border-left: $loader-width/2 solid transparent;
-      border-right: $loader-width/2 solid colors.$bg-download;
-      top: -($loader-width/2);
+      border-top: 0;
+      border-bottom: $loader-width solid colors.$bg-download;
+      border-left: $loader-width solid transparent;
+      border-right: 0;
+      top: -($loader-width);
     }
 
     &:after {
-      border-top: $loader-width/2 solid colors.$bg-download;
-      border-bottom: $loader-width/2 solid transparent;
-      border-left: $loader-width/2 solid colors.$bg-download;
-      border-right: $loader-width/2 solid transparent;
+      border-top: $loader-width solid colors.$bg-download;
+      border-bottom: 0;
+      border-left: 0;
+      border-right: $loader-width solid transparent;
       bottom: -($loader-width);
     }
 
