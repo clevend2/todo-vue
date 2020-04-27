@@ -60,7 +60,7 @@ const notes: Persisted<INote>[] = [
   },
 ];
 
-let maxId = 6;
+let maxId = notes.length;
 
 const notesAPI = {
   async find(parameters: IEntityParameters): Promise<IEntityReadResult<INote>> {
@@ -84,9 +84,11 @@ const notesAPI = {
       maxId += 1;
 
       created = {
-        id: `${maxId + 1}`,
-        entityData,
+        ...entityData,
+        id: `${maxId}`,
       };
+
+      notes.push(created);
     }
 
     return created;

@@ -88,9 +88,15 @@ export default class AppNote extends Vue {
     this.$on('noteChanged', (note: INote) => {
       this.uploading = true;
 
-      sendNote(note).then(() => {
+      const isNew = !note.id;
+
+      sendNote(note).then((persistedNote) => {
         this.dirty = false;
         this.uploading = false;
+
+        if (isNew) {
+          this.$router.replace(`/note/${persistedNote.id}`);
+        }
       });
     });
   }
@@ -113,15 +119,17 @@ export default class AppNote extends Vue {
     });
   }
 
-  async beforeRouteUpdate(to: Route) {
+  async beforeRouteUpdate(to: Route, from: Route, next: Function) {
     this.unmountUI();
     this.downloading = true;
     await this.prepareUI(prepareNoteData(to.params.noteId));
     this.downloading = false;
+    next();
   }
 
-  beforeRouteLeave() {
+  beforeRouteLeave(to: Route, from: Route, next: Function) {
     this.unmountUI();
+    next();
   }
 
   /**
