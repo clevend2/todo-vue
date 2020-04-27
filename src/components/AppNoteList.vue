@@ -21,12 +21,21 @@
 /* eslint-disable no-unused-vars, import/no-unresolved */
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { DEFAULT_PARAMETERS } from '../entities/defaults';
-import { ID } from '../api/types';
-import { INote } from '../entities/types';
-import { logger } from '../util';
+import { DEFAULT_PARAMETERS } from '@/entities/defaults';
+import { ID, Persisted } from '@/api/types';
+import { INote, IEntityParameters } from '@/entities/types';
+import { logger } from '@/util';
+import rootStore from '@/store';
+import { Route } from 'vue-router';
 import AppNoteLink from './AppNoteLink.vue';
 /* eslint-enable no-unused-vars, import/no-unresolved */
+
+function getParameters(context: Partial<IEntityParameters>): IEntityParameters {
+  return {
+    keywords: context.keywords || '',
+    deadline: context.deadline || null,
+  };
+}
 
 @Component({
   name: 'AppNoteList',
@@ -41,20 +50,20 @@ export default class AppNoteList extends Vue {
   @Prop({ default: DEFAULT_PARAMETERS.deadline })
   readonly deadline!: number | null;
 
-  get parameters() {
-    return {
-      keywords: this.keywords,
-      deadline: this.deadline,
-    };
-  }
+  notes: Persisted<INote>[] = [];
 
-  get notes() {
-    return this.$store.state.notes.data;
-  }
+  // eslint-disable-next-line class-methods-use-this
+  beforeRouteEnter(to: Route, from: Route, next: Function) {
+    const parameters = getParameters(to.params);
 
-  created() {
-    logger.log('created...');
-    this.$store.dispatch('notes/read', this.parameters);
+    const notesPromise = rootStore.dispatch('notes/read', parameters);
+
+    next((vm: AppNoteList) => {
+      const that = vm;
+      notesPromise.then(() => {
+        that.notes = that.$store.state.notes.data;
+      });
+    });
   }
 }
 </script>
