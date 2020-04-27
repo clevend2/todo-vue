@@ -39,5 +39,5 @@ export interface IReadResult {
 }
 
 export type Persisted<T> = {
-  [P in keyof T]?: T[P];
+  [P in keyof T]: T[P];
 } & { id: ID };
