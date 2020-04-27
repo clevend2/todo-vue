@@ -1,21 +1,28 @@
 <template>
-  <article class="note">
+  <article
+    class="note"
+    :class="{'show-skeleton': downloading}"
+  >
     <app-loader
       :uploading="uploading"
       :downloading="downloading"
     />
     <header>
+      <h1 class="skeleton-element note-gist" />
       <h1
         ref="gist"
-        class="note-gist"
+        class="flesh-element note-gist"
         contenteditable="true"
       />
     </header>
-    <section
-      ref="text"
-      class="note-text"
-      contenteditable="true"
-    />
+    <section>
+      <div class="skeleton-element note-text" />
+      <div
+        ref="text"
+        class="flesh-element note-text"
+        contenteditable="true"
+      />
+    </section>
     <!-- <footer class="note-footer">
       <i v-show="dirty">Edited</i>
     </footer> -->
@@ -34,12 +41,14 @@ import debounce from '@/util/debounce';
 import { startObserving, stopObserving } from '@/util/text-observer';
 import { prepareNoteData, sendNote } from '@/entities/services/note';
 import AppLoader from './_shared/AppLoader.vue';
+import AppSkeletonElement from './_shared/AppSkeletonElement.vue';
 /* eslint-enable no-unused-vars, import/no-unresolved */
 
 @Component({
   name: 'AppNote',
   components: {
     AppLoader,
+    AppSkeletonElement,
   },
 })
 export default class AppNote extends Vue {
@@ -68,7 +77,7 @@ export default class AppNote extends Vue {
   /**
    * UI flag for incoming data
    */
-  downloading: boolean = false;
+  downloading: boolean = true;
 
   /**
    * UI flag for data desync from store
@@ -171,6 +180,7 @@ export default class AppNote extends Vue {
 @use '@/assets/scss/_spacing' as spacing;
 @use '@/assets/scss/_mixins' as mixins;
 @use '@/assets/scss/_font' as font;
+@use '@/assets/scss/_skeletons';
 
 .note {
   @include mixins.elevate(colors.$shadow, spacing.$text/2);

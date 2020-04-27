@@ -1,5 +1,8 @@
 <template>
-  <ul class="note-list">
+  <ul
+    class="note-list"
+    :class="{'show-skeleton': downloading}"
+  >
     <li>
       <router-link
         class="note-link new-note"
@@ -7,8 +10,14 @@
       />
     </li>
     <li
+      v-for="n in ['sk-1','sk-2','sk-3']"
+      :key="n"
+      class="skeleton-element"
+    />
+    <li
       v-for="note in notes"
       :key="note.id"
+      class="flesh-element"
     >
       <app-note-link
         :note="note"
@@ -50,6 +59,11 @@ export default class AppNoteList extends Vue {
   @Prop({ default: DEFAULT_PARAMETERS.deadline })
   readonly deadline!: number | null;
 
+  /**
+   * UI flag for incoming data
+   */
+  downloading: boolean = true;
+
   notes: Persisted<INote>[] = [];
 
   // eslint-disable-next-line class-methods-use-this
@@ -60,8 +74,10 @@ export default class AppNoteList extends Vue {
 
     next((vm: AppNoteList) => {
       const that = vm;
+      that.downloading = true;
       notesPromise.then(() => {
         that.notes = that.$store.state.notes.data;
+        that.downloading = false;
       });
     });
   }
@@ -72,6 +88,7 @@ export default class AppNoteList extends Vue {
 @use '@/assets/scss/_colors' as colors;
 @use '@/assets/scss/_spacing' as spacing;
 @use '@/assets/scss/_mixins' as decor;
+@use '@/assets/scss/_skeletons';
 
 .note-list {
   display: flex;
@@ -85,13 +102,21 @@ export default class AppNoteList extends Vue {
     margin: spacing.$text/2;
     overflow: hidden;
 
+    >.note-link, &.skeleton-element {
+      height: spacing.$row;
+      min-width: spacing.$row;
+      padding: spacing.$text spacing.$text*2 spacing.$text spacing.$text;
+    }
+
+    &.skeleton-element {
+      width: spacing.$row*2;
+    }
+
     >.note-link {
       background-color: colors.$bg;
       border: 1px solid colors.$border;
       color: colors.$text;
       display: block;
-      height: spacing.$row;
-      padding: spacing.$text spacing.$text*2 spacing.$text spacing.$text;
       transition: color 0.2s;
 
       &.new-note {

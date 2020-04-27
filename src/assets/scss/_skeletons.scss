@@ -1,0 +1,40 @@
+$bg-color: #ddd;
+
+$pulse-speed: 0.5s;
+$pulse-timing-function: ease-in-out;
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton-element {
+  animation: skeleton-pulse $pulse-speed $pulse-timing-function alternate infinite;
+  background-color: $bg-color;
+  display: none;
+  pointer-events: none;
+}
+
+.skeleton-element + .skeleton-element {
+  animation-delay: $pulse-speed/2;
+}
+
+.skeleton-element + .skeleton-element + .skeleton-element {
+  animation-delay: $pulse-speed;
+}
+
+.show-skeleton {
+  .skeleton-element {
+    display: block;
+  }
+
+  .flesh-element {
+    display: none !important;
+  }
+}
+
