@@ -15,9 +15,9 @@ $pulse-timing-function: ease-in-out;
 
 .skeleton-element {
   animation: skeleton-pulse $pulse-speed $pulse-timing-function alternate infinite;
-  background-color: $bg-color;
+  background-color: $bg-color !important;
   display: none;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 .skeleton-element + .skeleton-element {

@@ -1,20 +1,32 @@
 // background
-$backdrop: #4e1a38;
-$bg: #fcfcfc;
-$bg-hover: #fff;
-$bg-secondary: #f9f9f9;
-$bg-upload: #0cfa0c;
-$bg-download: #0c0cfa;
+$backdrop: #333;
+$bg: #fff;
+$bg-focused: #f4f4f4;
+$bg-dark: #555;
+$bg-dark-focused: #444;
+
+$bg-changing: #00ff3f;
+$bg-getting: #00c0ff;
 
 // border
-$border: #9985ad;
+$border: #bbb;
+$border-focused: #eee;
 $border-neutral: #e5e5e5;
+$border-dark: #555;
+$border-dark-focused: #666;
 
 // shadow
-$shadow: #333;
-$shadow-focused: #222;
+$shadow: #222;
+$shadow-focused: #111;
 
 // text
-$text: #666;
-$text-focus: #333;
-$text-secondary: #999;
+$text: #333;
+$text-secondary: #666;
+$text-focused: #111;
+
+$list-text: $bg-dark;
+$list-text-focused: $text-focused;
+
+// link
+$link-text: #369;
+$link-text-focused: #258;

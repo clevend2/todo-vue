@@ -1,2 +1,14 @@
+/* y'know, THE ratio */
+$the-ratio: 1.618;
+
+/* space around text */
 $text: 1em;
-$row: 3em;
+
+/* unit of height for UI elements */
+$row-height: 3em;
+
+/* space between distinct elements */
+$between: 1.5em;
+
+/* unit of z-elevation */
+$elevation-depth: 0.25em;

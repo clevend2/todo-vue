@@ -1,0 +1,28 @@
+@use '@/assets/scss/_colors' as colors;
+@use '@/assets/scss/_spacing' as spacing;
+
+.note-link-container {
+  overflow: hidden;
+}
+
+.note-link, .note-link-container {
+  border-radius: 0 0 spacing.$text 0;
+}
+
+.note-link {
+  background-color: colors.$bg;
+  border: 1px solid colors.$border;
+  color: colors.$link-text;
+  display: inline-block;
+  overflow: hidden;
+  padding: spacing.$text spacing.$text*spacing.$the-ratio spacing.$text spacing.$text;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:focus {
+    background-color: colors.$bg-focused;
+    border: 1px solid colors.$border-focused;
+    color: colors.$link-text-focused;
+  }
+}

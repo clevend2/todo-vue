@@ -1,11 +1,11 @@
 <template>
   <article
     class="note"
-    :class="{'show-skeleton': downloading}"
+    :class="{'show-skeleton': getting}"
   >
     <app-loader
-      :uploading="uploading"
-      :downloading="downloading"
+      :changing="changing"
+      :getting="getting"
     />
     <header>
       <h1 class="skeleton-element note-gist" />
@@ -40,15 +40,13 @@ import { logger } from '@/util';
 import debounce from '@/util/debounce';
 import { startObserving, stopObserving } from '@/util/text-observer';
 import { prepareNoteData, sendNote } from '@/entities/services/note';
-import AppLoader from './_shared/AppLoader.vue';
-import AppSkeletonElement from './_shared/AppSkeletonElement.vue';
+import AppLoader from './AppLoader.vue';
 /* eslint-enable no-unused-vars, import/no-unresolved */
 
 @Component({
   name: 'AppNote',
   components: {
     AppLoader,
-    AppSkeletonElement,
   },
 })
 export default class AppNote extends Vue {
@@ -72,12 +70,12 @@ export default class AppNote extends Vue {
   /**
    * UI flag for outgoing data
    */
-  uploading: boolean = false;
+  changing: boolean = false;
 
   /**
    * UI flag for incoming data
    */
-  downloading: boolean = true;
+  getting: boolean = true;
 
   /**
    * UI flag for data desync from store
@@ -95,13 +93,13 @@ export default class AppNote extends Vue {
 
     // for now, the event is caught here and data processing is done in-component
     this.$on('noteChanged', (note: INote) => {
-      this.uploading = true;
+      this.changing = true;
 
       const isNew = !note.id;
 
       sendNote(note).then((persistedNote) => {
         this.dirty = false;
-        this.uploading = false;
+        this.changing = false;
 
         if (isNew) {
           this.$router.replace(`/note/${persistedNote.id}`);
@@ -122,17 +120,17 @@ export default class AppNote extends Vue {
     next(async (vm: AppNote) => {
       const that = vm;
 
-      that.downloading = true;
+      that.getting = true;
       await that.prepareUI(noteDataPromise);
-      that.downloading = false;
+      that.getting = false;
     });
   }
 
   async beforeRouteUpdate(to: Route, from: Route, next: Function) {
     this.unmountUI();
-    this.downloading = true;
+    this.getting = true;
     await this.prepareUI(prepareNoteData(to.params.noteId));
-    this.downloading = false;
+    this.getting = false;
     next();
   }
 
@@ -183,7 +181,7 @@ export default class AppNote extends Vue {
 @use '@/assets/scss/_skeletons';
 
 .note {
-  @include mixins.elevate(colors.$shadow, spacing.$text/2);
+  @include mixins.elevate(2);
 
   background-color: colors.$bg;
   margin: 0;
@@ -204,7 +202,7 @@ export default class AppNote extends Vue {
   }
 
   footer {
-    background-color: colors.$bg-secondary;
+    background-color: colors.$bg;
     border-top: 1px solid colors.$border-neutral;
     padding: spacing.$text;
     transition: height 0.2s;
@@ -215,12 +213,12 @@ export default class AppNote extends Vue {
   }
 
   .note-gist, .note-text {
-    color: colors.$text-focus;
+    color: colors.$text-focused;
     min-height: spacing.$text;
   }
 
   .note-text {
-    min-height: spacing.$row;
+    min-height: spacing.$row-height;
   }
 }
 </style>
