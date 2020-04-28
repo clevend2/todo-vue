@@ -55,10 +55,6 @@ export default class AppNote extends Vue {
    */
   $_debounced_noteChanged!: () => void;
 
-  /**
-   * promise to fulfill when mounting is complete
-   */
-
   $refs!: {
     'gist': HTMLElement;
     'text': HTMLElement;
