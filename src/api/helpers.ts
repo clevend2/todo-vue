@@ -183,7 +183,7 @@ function mockDelay(fn: Function): Function {
     () => {
       resolve(fn(...args));
     },
-    500 + (Math.random() * 5000),
+    500 + (Math.random() * 1000),
   ));
 }
 
