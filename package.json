@@ -10,7 +10,7 @@
   "dependencies": {
     "@types/lodash-es": "^4.17.3",
     "core-js": "^3.6.4",
-    "lodash-es": "^4.17.15",
+    "lodash-es": "^4.17.21",
     "normalize.css": "^8.0.1",
     "sass": "^1.26.3",
     "sass-loader": "^8.0.2",
